@@ -1,0 +1,303 @@
+#################
+# General Setting
+#################
+# Experiment name, if the experiment name has the word debug, it will enter debug mode
+<<<<<<< HEAD
+<<<<<<< HEAD
+#name: FSIL_WSNModel_res18_cifar_s20_layer3_c0.9_c0.1_lr1e-1_sig_5shots_100base
+name: FSIL_WSNModel_res50_cifar_layer4_c0.5_v1_lr1e-1_sig_5shots_100base
+=======
+# SoftNet
+#name: FSIL_WSN_cifar_tau0.3_s97_layer3_c1.0_nc0.1_0.9999_5shots_100base
+# HardNet
+#name: FSIL_HardNet_baseline_v1_cifar_c10_layer3_c0.002_5shots_100base
+name: FSIL_HardNet_baseline_rand_cifar_c0.10_all_5shots_100base 
+=======
+# SoftNet
+#name: FSIL_WSN_cifar_tau0.3_s97_layer3_c1.0_nc0.1_0.9999_5shots_100base
+# HardNet
+name: FSIL_HardNet_baseline_v1_cifar_c10_layer3_c0.002_5shots_100base  
+>>>>>>> origin/gpu219
+
+# HardNet
+#name: FSIL_HardNet_v1_cifar_c95_layer3_c1.99_5shots_100base
+# HardNet - w/o training
+#name: FSIL_HardNet_ecu_v1_cifar_c95_layer3_c0.002_5shots_100base
+
+# SigNet
+#name: FSIL_SigNet_cifar_c93_layer3_tau0.1_c0.002_5shots_100base
+
+# SupGauNet
+#name: FSIL_SupGauNet_cifar_c95_layer3_max1.1_c0.002_5shots_100base
+
+# SoftNet
+#name: FSIL_SoftNet_cifar_c95_tau1.0_scale0.01_layer3_c0.99_old0.01_cos_reg_former_5shots_lr1-1_100base
+
+# GausNet
+#name: FSIL_GausNet_cifar_c95_g97_layer3_c0.002_5shots_100base
+<<<<<<< HEAD
+>>>>>>> local_master
+# The type of model used, usually the class name of the model defined in the `methods` directory
+model_type: WSNFusionModel
+subnet_type: soft #soft
+=======
+# The type of model used, usually the class name of the model defined in the `methods` directory
+model_type: WSNFusionModel
+subnet_type: hard #soft
+>>>>>>> origin/gpu219
+
+# gpu
+gpu: 0
+# Random seed
+manual_seed: 1997
+Random: false
+use_cosine: false
+
+<<<<<<< HEAD
+
+subnet_type: soft
+=======
+>>>>>>> origin/gpu219
+
+#################################
+# The settings for the dataset and data loader
+#################################
+transformer_agu:
+  - type: RandomCrop
+    size: 32
+    padding: 4
+#  - type: ColorJitter
+#    brightness: 0.4
+#    contrast: 0.4
+#    saturation: 0.4
+  - type: RandomHorizontalFlip
+  - type: ToTensor
+  - type: Normalize
+    mean: !!python/tuple [ 0.5071,  0.4866,  0.4409 ]
+    std: !!python/tuple [ 0.2009,  0.1984,  0.2023 ]
+
+transformer:
+  - type: ToTensor
+  - type: Normalize
+    mean: !!python/tuple [ 0.5071,  0.4866,  0.4409 ]
+    std: !!python/tuple [ 0.2009,  0.1984,  0.2023 ]
+
+datasets:
+  # The important information of dataset
+  train:
+    name: cifar-100
+    type: NormalDataset
+    total_classes: 100
+    dataroot: DataSet/cifar-100/train
+    aug: true
+    pre_load: false
+    # Number of processes read by the data loader per GPU
+    num_worker_per_gpu: 8
+    # Batch size
+    batch_size: 25
+    pin_memory: true
+
+    sampler:
+      type: TaskSampler
+      num_samples: 5
+
+  val:
+    name: cifar-100
+    type: NormalDataset
+    total_classes: 100
+    dataroot: DataSet/cifar-100/test
+    aug: false
+    pre_load: false
+    num_worker_per_gpu: 8
+    sampler:
+      type: ~
+
+  test:
+    name: cifar-100
+    type: NormalDataset
+    total_classes: 100
+    dataroot: DataSet/cifar-100/test
+    aug: false
+    pre_load: true
+    num_worker_per_gpu: 8
+    sampler:
+      type: ~
+
+#####################
+# The following is the setup of the network structure
+#####################
+network_g:
+  type: SigResnet50_cifar_small
+  num_classes: 100
+  adopt_classifier: true
+  flatten: true
+<<<<<<< HEAD
+<<<<<<< HEAD
+  sparsity: 0.5
+  gamma: 1.0
+  alpha: 1.0
+
+finetune_layer: layer4.2
+new_sparsity: 0.5
+=======
+  sparsity: 0.9
+  gamma: 1.0
+  alpha: 1.0
+
+finetune_layer: all
+new_sparsity: 1.0
+
+>>>>>>> local_master
+=======
+  sparsity: 0.9
+  gamma: 1.0
+
+finetune_layer: layer3
+new_sparsity: 0.9
+>>>>>>> origin/gpu219
+
+######################################
+# The following are the paths
+######################################
+path:
+  # SoftNet, tau 0.07
+  #base_model: ./exp/cifar-100_bases60/FSIL_CFRPModel_res18_small_cifar_WSN0.9_signet0.90_tau0.07_220epoch_60base_100cls_wandb_001/models/best_net_latest.pth
+  #base_subnet_model: ./exp/cifar-100_bases60/FSIL_CFRPModel_res18_small_cifar_WSN0.9_signet0.90_tau0.07_220epoch_60base_100cls_wandb_001/models/best_net_subnet0_latest.pth.npy
+
+  # SoftNet, tau 0.1
+  #base_model: ./exp/cifar-100_bases60/FSIL_CFRPModel_res18_small_cifar_WSN0.9_signet0.90_tau0.1_220epoch_60base_100cls_wandb_001/models/best_net_latest.pth
+  #base_subnet_model: ./exp/cifar-100_bases60/FSIL_CFRPModel_res18_small_cifar_WSN0.9_signet0.90_tau0.1_220epoch_60base_100cls_wandb_001/models/best_net_subnet0_latest.pth.npy
+
+  # SoftNet, tau 0.3
+  #base_model: ./exp/cifar-100_bases60/FSIL_CFRPModel_res18_small_cifar_WSN0.9_signet0.97_tau0.3_220epoch_60base_100cls_wandb_001/models/best_net_latest.pth
+  #base_subnet_model: ./exp/cifar-100_bases60/FSIL_CFRPModel_res18_small_cifar_WSN0.9_signet0.97_tau0.3_220epoch_60base_100cls_wandb_001/models/best_net_subnet0_latest.pth.npy
+
+  # SoftNet, tau 1.0
+  #base_model: ./exp/cifar-100_bases60/FSIL_CFRPModel_res18_small_cifar_WSN0.95_signet0.90_tau1.0_220epoch_60base_100cls_wandb_001/models/best_net_latest.pth
+  #base_subnet_model: ./exp/cifar-100_bases60/FSIL_CFRPModel_res18_small_cifar_WSN0.95_signet0.90_tau1.0_220epoch_60base_100cls_wandb_001/models/best_net_subnet0_latest.pth.npy
+
+  # HardNet 
+<<<<<<< HEAD
+  base_model: ./exp/cifar-100_bases60/FSIL_CFRPModel_res18_small_cifar_WSN0.10_rand_60base_100cls_wandb_001/models/best_net_latest.pth
+  base_subnet_model: ./exp/cifar-100_bases60/FSIL_CFRPModel_res18_small_cifar_WSN0.10_rand_60base_100cls_wandb_001/models/best_net_subnet0_latest.pth.npy
+=======
+  base_model: ./exp/cifar-100_bases60/FSIL_CFRPModel_res18_small_cifar_WSN0.10_hardnet_60base_100cls_wandb_001/models/best_net_latest.pth
+  base_subnet_model: ./exp/cifar-100_bases60/FSIL_CFRPModel_res18_small_cifar_WSN0.10_hardnet_60base_100cls_wandb_001/models/best_net_subnet0_latest.pth.npy
+>>>>>>> origin/gpu219
+
+  # SigNet
+  #base_model: ./exp/cifar-100_bases60/FSIL_CFRPModel_res18_small_cifar_WSN0.95_signet0.99_tau1.0_scale0.01_200epoch_60base_100cls_wandb_001/models/best_net_latest.pth
+  #base_subnet_model: ./exp/cifar-100_bases60/FSIL_CFRPModel_res18_small_cifar_WSN0.95_signet0.99_tau1.0_scale0.01_200epoch_60base_100cls_wandb_001/models/best_net_subnet0_latest.pth.npy
+
+  # SupGauNet
+  #base_model: ./exp/cifar-100_bases60/FSIL_CFRPModel_res18_small_cifar_SupGauNet0.95_max1.1_220epoch_60base_100cls_wandb_001/models/best_net_latest.pth
+  #base_subnet_model: ./exp/cifar-100_bases60/FSIL_CFRPModel_res18_small_cifar_SupGauNet0.95_max1.1_220epoch_60base_100cls_wandb_001/models/best_net_subnet0_latest.pth.npy
+
+<<<<<<< HEAD
+<<<<<<< HEAD
+  #base_model: ./exp/cifar-100_bases60/FSIL_CFRPModel_res18_small_cifar_WSN0.9_signet0.20_220epoch_60base_100cls_wandb_001/models/best_net_latest.pth
+  #base_subnet_model: ./exp/cifar-100_bases60/FSIL_CFRPModel_res18_small_cifar_WSN0.9_signet0.20_220epoch_60base_100cls_wandb_001/models/best_net_subnet0_latest.pth.npy
+
+  base_model: ./exp/cifar-100_bases60/FSIL_CFRPModel_res50_signet0.50_60base_100cls_wandb_001_v1/models/best_net_latest.pth
+  base_subnet_model: ./exp/cifar-100_bases60/FSIL_CFRPModel_res50_signet0.50_60base_100cls_wandb_001_v1/models/best_net_subnet0_latest.pth.npy
+=======
+  # GauNet
+  #base_model: ./exp/cifar-100_bases60/FSIL_CFRPModel_res18_small_cifar_WSN0.95_gaunet0.97_130epoch_60base_100cls_wandb_001/models/best_net_latest.pth
+  #base_subnet_model: ./exp/cifar-100_bases60/FSIL_CFRPModel_res18_small_cifar_WSN0.95_gaunet0.97_130epoch_60base_100cls_wandb_001/models/best_net_subnet0_latest.pth.npy
+=======
+  # GauNet
+  #base_model: ./exp/cifar-100_bases60/FSIL_CFRPModel_res18_small_cifar_WSN0.95_gaunet0.97_130epoch_60base_100cls_wandb_001/models/best_net_latest.pth
+  #base_subnet_model: ./exp/cifar-100_bases60/FSIL_CFRPModel_res18_small_cifar_WSN0.95_gaunet0.97_130epoch_60base_100cls_wandb_001/models/best_net_subnet0_latest.pth.npy
+
+>>>>>>> origin/gpu219
+  
+>>>>>>> local_master
+  strict_load: false
+
+#################
+# The following is the training setup
+#################
+train:
+  # Optimizer
+  optim_g:
+    # The type of optimizer
+    type: iSGD
+    ##### The following properties are flexible and have different settings depending on the optimizer
+    # learning rate
+    lr: !!float 1e-3
+    weight_decay: !!float 5e-4
+    # momentum
+    momentum: !!float 0.9
+
+  # The setting of scheduler
+  scheduler:
+    # The type of scheduler
+    type: MultiStepLR
+    #### The following properties are flexible, depending on the learning rate Scheduler has different settings
+    # milestones, using iteration to represent the points to decay the learning rate
+    milestones: [ !!python/object/apply:eval [ 80 * 2 ]]
+
+    # gama
+    gamma: 0.3
+
+  # whether fine_tune
+  fine_tune: true
+  # The number of epoch
+  fine_tune_epoch: 15
+
+  # The threshold of model parameters to fix the layers of model
+  threshold: 0.4
+  # The number of warm up iteration, if -1, means no warm up
+  warmup_iter: -1  # no warm up
+  # number of base classes
+  bases: 60
+  # number of tasks for incremental few-shot learning
+  tasks: 9
+  # number of shots for incremental few-shot learning
+  shots: 5
+  novel_exemplars: 5
+  # number of tests for incremental few-shot learning
+  num_test: 10
+  # losses
+  #metric_opt:
+  #type: TripletLossNoHardMining
+  #margin: !!float 0.0
+  #num_instances: 5
+  #pn_opt:
+  #  type: IncrementalPTFixPNLoss
+  #  w: 1.0
+  #  omega: 1.0
+  #  n_shots: 5
+  #  use_cosine: true
+  cpn_opt:
+    type: IncrementalCPTFixPNLoss
+    w: 1.0
+    omega: 1.0
+    n_shots: 5
+    use_cosine: true
+
+#######################
+# The following are the settings for Validation
+#######################
+val:
+  # The frequency of validation
+  val_freq: 1000
+  test_type: NCM
+  p_norm: false
+
+####################
+# The following are the settings for Logging
+####################
+logger:
+  # Frequency of loggers printed on the screen according to iteration
+  print_freq: 2
+  # Whether to use tensorboard logger
+  use_tb_logger: true
+
+  wandb:
+    # The default is None, i.e. wandb is not used.
+    project: FIL-Noise-Cifar-Incremental
+    # If it is resume, you can enter the last wandb id, then the log can be connected
+    resume_id: ~
+
+

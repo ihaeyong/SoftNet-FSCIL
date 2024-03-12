@@ -1,0 +1,184 @@
+#################
+# General Setting
+#################
+# Experiment name, if the experiment name has the word debug, it will enter debug mode
+# HardNet
+name: FSIL_TOPIC_HardNet_CS_res18_cifar_c0.70_5shots_60base 
+
+model_type: WSNBaseTopicModel
+subnet_type: softnet
+
+gpu: 0
+manual_seed: 1997
+Random: false
+use_cosine: true
+details: true
+
+#################################
+# The settings for the dataset and data loader
+#################################
+transformer_agu:
+  - type: RandomCrop
+    size: 32
+    padding: 4
+  - type: RandomHorizontalFlip
+  - type: ToTensor
+  - type: Normalize
+    mean: !!python/tuple [ 0.5071,  0.4866,  0.4409 ]
+    std: !!python/tuple [ 0.2009,  0.1984,  0.2023 ]
+
+transformer:
+  - type: ToTensor
+  - type: Normalize
+    mean: !!python/tuple [ 0.5071,  0.4866,  0.4409 ]
+    std: !!python/tuple [ 0.2009,  0.1984,  0.2023 ]
+
+datasets:
+  # The important information of dataset
+  train:
+    name: cifar100
+    type: NormalDataset
+    total_classes: 100
+    dataroot: DataSet/cifar-100
+    aug: true
+    pre_load: false
+    # Number of processes read by the data loader per GPU
+    num_worker_per_gpu: 8
+    # Batch size
+    batch_size: 25
+    pin_memory: true
+
+    sampler:
+      type: TaskSampler
+      num_samples: 5
+
+  val:
+    name: cifar100
+    type: NormalDataset
+    total_classes: 100
+    dataroot: DataSet/cifar-100
+    aug: false
+    pre_load: false
+    num_worker_per_gpu: 8
+    sampler:
+      type: ~
+
+  test:
+    name: cifar100
+    type: NormalDataset
+    total_classes: 100
+    dataroot: DataSet/cifar-100
+    aug: false
+    pre_load: true
+    num_worker_per_gpu: 8
+    sampler:
+      type: ~
+
+#####################
+# The following is the setup of the network structure
+#####################
+network_g:
+  type: SigResnet18_small_v1
+  num_classes: 100
+  adopt_classifier: true
+  flatten: true
+  sparsity: 0.3
+  gamma: 1.0
+  conv1_kernel: 3
+
+finetune_layer: layer4.1
+
+######################################
+# The following are the paths
+######################################
+path:
+  # HardNet
+  #base_model: ./exp/cifar-100_bases60/FSIL_CFRPModel_res18_hardnet0.97_60base/models/best_net_latest.pth
+  #base_subnet_model: ./exp/cifar-100_bases60/FSIL_CFRPModel_res18_hardnet0.97_60base/models/best_net_subnet0_latest.pth
+
+  # SoftNet
+  base_model: ./exp/cifar-100_bases60/FSIL_CFRPModel_res18_hardnet0.70_60base/models/best_net_latest.pth
+  base_subnet_model: ./exp/cifar-100_bases60/FSIL_CFRPModel_res18_hardnet0.70_60base/models/best_net_subnet0_latest.pth
+
+  strict_load: false
+
+#################
+# The following is the training setup
+#################
+train:
+  # Optimizer
+  optim_g:
+    # The type of optimizer
+    type: SGD
+    ##### The following properties are flexible and have different settings depending on the optimizer
+    # learning rate
+    lr: !!float 2e-3
+    weight_decay: !!float 5e-4
+    # momentum
+    momentum: !!float 0.9
+
+  # The setting of scheduler
+  scheduler:
+    # The type of scheduler
+    type: MultiStepLR
+    #### The following properties are flexible, depending on the learning rate Scheduler has different settings
+    # milestones, using iteration to represent the points to decay the learning rate
+    milestones: [ !!python/object/apply:eval [ 80 * 2 ]]
+
+    # gama
+    gamma: 0.3
+
+  # whether fine_tune
+  fine_tune: true
+  # The number of epoch
+  fine_tune_epoch: 15
+
+  # The threshold of model parameters to fix the layers of model
+  threshold: 0.4
+  # The number of warm up iteration, if -1, means no warm up
+  warmup_iter: -1  # no warm up
+  # number of base classes
+  bases: 60
+  # number of tasks for incremental few-shot learning
+  tasks: 9
+  # number of shots for incremental few-shot learning
+  shots: 5
+  # number of ways for incremental few-shot learning
+  way: 5
+  # load previously learned prototypes 
+  novel_exemplars: 0
+  # number of tests for incremental few-shot learning
+  num_test: 1
+  # losses
+  cpn_opt:
+    type: IncrementalKPTFixPNLoss
+    w: 1.0
+    omega: 1.0
+    n_shots: 5
+    use_cosine: true
+
+#######################
+# The following are the settings for Validation
+#######################
+val:
+  # The frequency of validation
+  val_freq: 1000
+  test_type: NCM
+  p_norm: false
+
+####################
+# The following are the settings for Logging
+####################
+logger:
+  # Frequency of loggers printed on the screen according to iteration
+  print_freq: 2
+  # Whether to use tensorboard logger
+  use_tb_logger: true
+
+  wandb:
+    # The default is None, i.e. wandb is not used.
+    project: FSIL-TOPIC-Cifar-5shots-60bases
+    # If it is resume, you can enter the last wandb id, then the log can be connected
+    resume_id: ~
+
+

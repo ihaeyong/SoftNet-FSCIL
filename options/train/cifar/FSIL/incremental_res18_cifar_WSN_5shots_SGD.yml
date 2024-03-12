@@ -1,0 +1,186 @@
+#################
+# General Setting
+#################
+# Experiment name, if the experiment name has the word debug, it will enter debug mode
+name: FSIL_WSNModel_res18_cifar_backbone_c0.3_WSN_c0.30_adv_new_ce_5shots_both_60base
+# The type of model used, usually the class name of the model defined in the `methods` directory
+model_type: WSNModel
+# gpu
+gpu: 0
+# Random seed
+manual_seed: 1997
+Random: false
+use_cosine: true
+nondist: true
+
+#################################
+# The settings for the dataset and data loader
+#################################
+transformer_agu:
+  - type: RandomCrop
+    size: 32
+    padding: 4
+#  - type: ColorJitter
+#    brightness: 0.4
+#    contrast: 0.4
+#    saturation: 0.4
+  - type: RandomHorizontalFlip
+  - type: ToTensor
+  - type: Normalize
+    mean: !!python/tuple [ 0.5071,  0.4866,  0.4409 ]
+    std: !!python/tuple [ 0.2009,  0.1984,  0.2023 ]
+
+transformer:
+  - type: ToTensor
+  - type: Normalize
+    mean: !!python/tuple [ 0.5071,  0.4866,  0.4409 ]
+    std: !!python/tuple [ 0.2009,  0.1984,  0.2023 ]
+
+
+datasets:
+  # The important information of dataset
+  train:
+    name: cifar-100
+    type: NormalDataset
+    total_classes: 100
+    dataroot: DataSet/cifar-100/train
+    aug: true
+    pre_load: false
+    # Number of processes read by the data loader per GPU
+    num_worker_per_gpu: 8
+    # Batch size
+    batch_size: 25
+    pin_memory: false
+
+    sampler:
+      type: TaskSampler
+      num_samples: 5
+
+  val:
+    name: cifar-100
+    type: NormalDataset
+    total_classes: 100
+    dataroot: DataSet/cifar-100/test
+    aug: false
+    pre_load: false
+    num_worker_per_gpu: 8
+    sampler:
+      type: ~
+
+  test:
+    name: cifar-100
+    type: NormalDataset
+    total_classes: 100
+    dataroot: DataSet/cifar-100/test
+    aug: false
+    pre_load: true
+    num_worker_per_gpu: 8
+    sampler:
+      type: ~
+
+#####################
+# The following is the setup of the network structure
+#####################
+network_g:
+  type: SubResnet20_cifar_small
+  num_classes: 100
+  adopt_classifier: true
+  flatten: true
+  sparsity: 0.30
+  
+
+######################################
+# The following are the paths
+######################################
+path:
+  #base_model: ./exp/cifar-100_bases60/FSIL_CFRPModel_res18_small_cifar_WSN_subnet0.3_60base_wandb_001/models/best_net_latest.pth
+  #base_subnet_model: ./exp/cifar-100_bases60/FSIL_CFRPModel_res18_small_cifar_WSN_subnet0.3_60base_wandb_001/models/best_net_subnet0_latest.pth.npy
+  base_model: ./exp/cifar-100_bases60/FSIL_CFRPModel_res18_small_cifar_WSN_subnet_new_adv_60base_100cls_fc0.3_wandb_001/models/best_net_latest.pth
+  base_subnet_model: ./exp/cifar-100_bases60/FSIL_CFRPModel_res18_small_cifar_WSN_subnet_new_adv_60base_100cls_fc0.3_wandb_001/models/best_net_subnet0_latest.pth.npy
+
+  strict_load: false
+
+
+#################
+# The following is the training setup
+#################
+train:
+  # Optimizer
+  optim_g:
+    # The type of optimizer
+    type: iSGD
+    ##### The following properties are flexible and have different settings depending on the optimizer
+    # learning rate
+    lr: !!float 1e-3
+    weight_decay: !!float 5e-4
+    # momentum
+    momentum: !!float 0.9
+
+  # The setting of scheduler
+  scheduler:
+    # The type of scheduler
+    type: MultiStepLR
+    #### The following properties are flexible, depending on the learning rate Scheduler has different settings
+    # milestones, using iteration to represent the points to decay the learning rate
+    milestones: [ !!python/object/apply:eval [ 80 * 2 ]]
+
+    # gama
+    gamma: 0.1
+
+  # whether fine_tune
+  fine_tune: true
+  # The number of epoch
+  fine_tune_epoch: 15
+
+  # The threshold of model parameters to fix the layers of model
+  threshold: 0.4
+  # The number of warm up iteration, if -1, means no warm up
+  warmup_iter: -1  # no warm up
+  # number of base classes
+  bases: 60
+  # number of tasks for incremental few-shot learning
+  tasks: 9
+  # number of shots for incremental few-shot learning
+  shots: 5
+  novel_exemplars: 5
+  # number of tests for incremental few-shot learning
+  num_test: 10
+  # losses
+  #metric_opt:
+  #  type: TripletLossNoHardMining
+  #  margin: !!float 0.0
+  #  num_instances: 5
+  #pn_opt:
+  #  type: IncrementalPTFixPNLoss
+  #  w: 1.0
+  #  omega: 1.0
+  #  n_shots: 5
+  #  use_cosine: false
+  #regularization:
+  #  type: IncrementalNetworkFixLoss
+  #  w: 5.0
+
+#######################
+# The following are the settings for Validation
+#######################
+val:
+  # The frequency of validation
+  val_freq: 1000
+  test_type: NCM
+  p_norm: ~
+
+####################
+# The following are the settings for Logging
+####################
+logger:
+  # Frequency of loggers printed on the screen according to iteration
+  print_freq: 2
+  # Whether to use tensorboard logger
+  use_tb_logger: true
+
+  wandb:
+    # The default is None, i.e. wandb is not used.
+    project: FIL-Noise-Cifar-Incremental
+    # If it is resume, you can enter the last wandb id, then the log can be connected
+    resume_id: ~
+

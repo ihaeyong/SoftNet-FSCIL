@@ -1,0 +1,144 @@
+#################
+# General Setting
+#################
+# Experiment name, if the experiment name has the word debug, it will enter debug mode
+name: FSIL_TOPIC_res18_cifar_5shots_60bases
+# The type of model used, usually the class name of the model defined in the `methods` directory
+model_type: BaselineTopicModel
+# gpu
+gpu: 0
+# Random seed
+manual_seed: 1997
+Random: false
+use_cosine: false
+details: true
+
+#################################
+# The settings for the dataset and data loader
+#################################
+transformer_agu:
+  - type: RandomCrop
+    size: 32
+    padding: 4
+  - type: RandomHorizontalFlip
+  - type: ToTensor
+  - type: Normalize
+    mean: !!python/tuple [ 0.5071,  0.4866,  0.4409 ]
+    std: !!python/tuple [ 0.2009,  0.1984,  0.2023 ]
+
+transformer:
+  - type: ToTensor
+  - type: Normalize
+    mean: !!python/tuple [ 0.5071,  0.4866,  0.4409 ]
+    std: !!python/tuple [ 0.2009,  0.1984,  0.2023 ]
+
+
+datasets:
+  # The important information of dataset
+  train:
+    name: cifar-100
+    type: NormalDataset
+    total_classes: 100
+    dataroot: DataSet/cifar-100
+    aug: true
+    pre_load: false
+    # Number of processes read by the data loader per GPU
+    num_worker_per_gpu: 8
+    # Batch size
+    batch_size: 25
+    pin_memory: true
+
+    sampler:
+      type: TaskSampler
+      num_samples: 5
+
+  val:
+    name: cifar-100
+    type: NormalDataset
+    total_classes: 100
+    dataroot: DataSet/cifar-100
+    aug: false
+    pre_load: false
+    num_worker_per_gpu: 8
+    sampler:
+      type: ~
+
+  test:
+    name: cifar-100
+    type: NormalDataset
+    total_classes: 100
+    dataroot: DataSet/cifar-100
+    aug: false
+    pre_load: true
+    num_worker_per_gpu: 8
+    sampler:
+      type: ~
+
+#####################
+# The following is the setup of the network structure
+#####################
+network_g:
+  type: Resnet18_cifar
+  num_classes: 60
+  adopt_classifier: true
+  flatten: true
+
+######################################
+# The following are the paths
+######################################
+path:
+  # Pre-trained model path, need models ending in pth
+  pretrain_model_g: ~
+  # Base model path, need models ending in pth
+  base_model: ./exp/cifar-100_bases60/FSIL_TOPIC_res18_cifar_baseline_60base/models/best_net_latest.pth
+  strict_load: false
+
+#################
+# The following is the training setup
+#################
+train:
+  # Optimizer
+  optim_g:
+    # The type of optimizer
+    type: ~
+
+  # The setting of scheduler
+  scheduler:
+    # The type of scheduler
+    type: ~
+
+  # The number of exemplars for novel classes
+  novel_exemplars: 5
+  # The number of warm up iteration, if -1, means no warm up
+  warmup_iter: -1  # no warm up
+  # number of base classes
+  bases: 60
+  # number of tasks for incremental few-shot learning
+  tasks: 9
+  # number of shots for incremental few-shot learning
+  shots: 5
+  # number of ways for incremental few-shot learning
+  way: 5
+  # number of tests for incremental few-shot learning
+  num_test: 1
+
+#######################
+# The following are the settings for Validation
+#######################
+val:
+  val_freq: ~
+
+####################
+# The following are the settings for Logging
+####################
+logger:
+  # Frequency of loggers printed on the screen according to iteration
+  print_freq: 1
+  # Whether to use tensorboard logger
+  use_tb_logger: true
+  wandb:
+    # The default is None, i.e. wandb is not used.
+    project: FSIL-TOPIC-Cifar-5shots-60bases
+    # If it is resume, you can enter the last wandb id, then the log can be connected
+    resume_id: ~
+

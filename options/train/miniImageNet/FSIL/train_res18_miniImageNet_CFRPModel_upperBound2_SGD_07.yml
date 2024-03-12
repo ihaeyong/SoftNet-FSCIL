@@ -1,0 +1,156 @@
+#################
+# General Setting
+#################
+# Experiment name, if the experiment name has the word debug, it will enter debug mode
+name: FSIL_CFRPModel_res18_miniImageNet_upperBound_{cRT}_60base_task7_wandb_001
+# The type of model used, usually the class name of the model defined in the `methods` directory
+model_type: CFRPModel
+# gpu
+gpu: '1'
+# Random seed
+manual_seed: 1997
+Random: false
+
+#################################
+# The settings for the dataset and data loader
+#################################
+transformer_agu:
+  - type: RandomResizedCrop
+    size: 84
+  - type: RandomHorizontalFlip
+  - type: ToTensor
+  - type: Normalize
+    mean: !!python/tuple [0.485, 0.456, 0.406]
+    std: !!python/tuple [0.229, 0.224, 0.225]
+
+transformer:
+  - type: Resize
+    size: 92
+  - type: CenterCrop
+    size: 84
+  - type: ToTensor
+  - type: Normalize
+    mean: !!python/tuple [ 0.485, 0.456, 0.406 ]
+    std: !!python/tuple [ 0.229, 0.224, 0.225 ]
+
+datasets:
+  # The important information of dataset
+  train:
+    name: miniImageNet
+    type: NormalDataset
+    total_classes: 100
+    dataroot: ./DataSet/FSIL_miniImageNet/miniimagenet/train
+    aug: true
+    # Number of processes read by the data loader per GPU
+    num_worker_per_gpu: 8
+    # Batch size
+    batch_size: 256
+    pin_memory: true
+    pre_load: false
+
+    sampler:
+      type: ClassAwareSampler
+      num_samples_cls: 4
+
+  val:
+    name: miniImageNet
+    type: NormalDataset
+    total_classes: 100
+    dataroot: ./DataSet/FSIL_miniImageNet/miniimagenet/test
+    aug: false
+    pin_memory: true
+    pre_load: false
+    # Number of processes read by the data loader per GPU
+    num_worker_per_gpu: 8
+    sampler:
+      type: ~
+
+#####################
+# The following is the setup of the network structure
+#####################
+network_g:
+  type: Resnet18_softmax
+  Embed_dim: 512
+  pretrained: false
+  norm: false
+  num_classes: ~
+  adopt_classifier: true
+  addition_net: false
+  flatten: true
+  cut_at_pooling: false
+
+######################################
+# The following are the paths
+######################################
+path:
+  # Pre-trained model path, need models ending in pth
+  pretrain_model_g: ./exp/miniImageNet_bases60/FSIL_CFRPModel_res18_miniImageNet_upperBound_60base_task7_wandb_001/models/best_net_latest.pth
+  # Whether to load pretrained models strictly, that is the corresponding parameter names should be the same
+  strict_load: true
+  #
+  resume_state: ~
+
+#################
+# The following is the training setup
+#################
+train:
+  # Optimizer
+  optim_g:
+    # The type of optimizer
+    type: SGD
+    ##### The following properties are flexible and have different settings depending on the optimizer
+    # learning rate
+    lr: !!float 1e-1
+    weight_decay: !!float 5e-4
+    # momentum
+    momentum: !!float 0.9
+
+  # The setting of scheduler
+  scheduler:
+    # The type of scheduler
+    type: MultiStepLR
+    #### The following properties are flexible, depending on the learning rate Scheduler has different settings
+    # milestones
+    milestones: [4, 6, 10]
+    # gama
+    gamma: 0.1
+
+  # The number of epoch
+  fix_backbone: true
+  reset_fc: true
+  epoch: 14
+  shots: 5
+  task_id: 7
+  # The number of warm up iteration, if -1, means no warm up
+  warmup_iter: -1  # no warm up
+  # number of base classes
+  bases: 60
+  # number of tasks for incremental few-shot learning
+  tasks: 9
+
+#######################
+# The following are the settings for Validation
+#######################
+val:
+  # The frequency of validation
+  val_freq: 400
+  debug_val_freq: 400
+
+####################
+# The following are the settings for Logging
+####################
+logger:
+  # Frequency of loggers printed on the screen according to iteration
+  print_freq: 20
+  # 保存checkpoint的频率
+  save_checkpoint_freq: 20000
+  # Whether to use tensorboard logger
+
+  use_tb_logger: true
+  # Whether to use wandb logger
+  wandb:
+    # The default is None, i.e. wandb is not used.
+    project: FSIL-Noise-miniImageNet-60bases
+    # If it is resume, you can enter the last wandb id, then the log can be connected
+    resume_id: ~
+

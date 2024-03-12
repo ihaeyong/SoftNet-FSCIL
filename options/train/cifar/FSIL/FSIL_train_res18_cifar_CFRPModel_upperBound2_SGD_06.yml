@@ -1,0 +1,156 @@
+#################
+# General Setting
+#################
+# Experiment name, if the experiment name has the word debug, it will enter debug mode
+name: CFRPModel_res18_cifar_upperBound_{cRT}_60base_task6_wandb_001
+# The type of model used, usually the class name of the model defined in the `methods` directory
+model_type: BaselineModel
+# gpu
+gpu: '1'
+# Random seed
+manual_seed: 1997
+Random: false
+
+#################################
+# The settings for the dataset and data loader
+#################################
+transformer_agu:
+  - type: RandomCrop
+    size: 32
+    padding: 4
+#  - type: ColorJitter
+#    brightness: 0.4
+#    contrast: 0.4
+#    saturation: 0.4
+  - type: RandomHorizontalFlip
+  - type: ToTensor
+  - type: Normalize
+    mean: !!python/tuple [0.5071,  0.4866,  0.4409]
+    std: !!python/tuple [0.2009,  0.1984,  0.2023]
+
+transformer:
+  - type: ToTensor
+  - type: Normalize
+    mean: !!python/tuple [ 0.5071,  0.4866,  0.4409 ]
+    std: !!python/tuple [ 0.2009,  0.1984,  0.2023 ]
+
+datasets:
+  # The important information of dataset
+  train:
+    name: cifar-100
+    type: NormalDataset
+    total_classes: 100
+    dataroot: DataSet/cifar-100/train
+    aug: true
+    # Number of processes read by the data loader per GPU
+    num_worker_per_gpu: 8
+    # Batch size
+    batch_size: 256
+    pin_memory: true
+    pre_load: false
+
+    sampler:
+      type: ClassAwareSampler
+      num_samples_cls: 4
+
+  val:
+    name: cifar-100
+    type: NormalDataset
+    total_classes: 100
+    dataroot: DataSet/cifar-100/test
+    aug: false
+    pin_memory: true
+    pre_load: false
+    num_worker_per_gpu: 8
+    sampler:
+      type: ~
+
+#####################
+# The following is the setup of the network structure
+#####################
+network_g:
+  type: Resnet20_cifar_small
+  num_classes: 60
+  adopt_classifier: true
+  flatten: true
+
+######################################
+# The following are the paths
+######################################
+path:
+  # Pre-trained model paths, need models ending in pth
+  pretrain_model_g: ./exp/cifar-100_bases60/CFRPModel_res18_cifar_upperBound_60base_task6_wandb_001/models/best_net_latest.pth
+  # Whether to load pretrained models strictly, that is the corresponding parameter names should be the same
+  strict_load: true
+  resume_state: ~
+
+#################
+# The following is the training setup
+#################
+train:
+  # Optimizer
+  optim_g:
+    # The type of optimizer
+    type: SGD
+    ##### The following properties are flexible and have different settings depending on the optimizer
+    # learning rate
+    lr: !!float 1e-1
+    weight_decay: !!float 5e-4
+    # momentum
+    momentum: !!float 0.9
+
+  # The setting of scheduler
+  scheduler:
+    # The type of scheduler
+    type: MultiStepLR
+    #### The following properties are flexible, depending on the learning rate Scheduler has different settings
+    # milestones
+    milestones: [8, 12, 14]
+    # gama
+    gamma: 0.5
+
+  # The number of images per class in the training set
+  images_per_class: 500
+  # Whether fix the backbone network during the training
+  fix_backbone: true
+  # Whether reset the fully connected layer
+  reset_fc: true
+  # The number of epoch
+  epoch: 16
+  # The number of samples per novel classes
+  shots: 5
+  # Current task id
+  task_id: 6
+  # The number of warm up iteration, if -1, means no warm up
+  warmup_iter: -1  # no warm up
+  # number of base classes
+  bases: 60
+  # number of tasks for incremental few-shot learning
+  tasks: 9
+
+#######################
+# The following are the settings for Validation
+#######################
+val:
+  # The frequency of validation
+  val_freq: 800
+  debug_val_freq: 400
+
+####################
+# The following are the settings for Logging
+####################
+logger:
+  # Frequency of loggers printed on the screen according to iteration
+  print_freq: 20
+  # Frequency of saving checkpoint
+  save_checkpoint_freq: 20000
+  # Whether to use tensorboard logger
+  use_tb_logger: true
+
+  # Whether or not to use wandb logger
+  wandb:
+    # The default is None, i.e. wandb is not used.
+    project: FSIL-Noise-Cifar-60bases
+    # If it is resume, you can enter the last wandb id, then the log can be connected
+    resume_id: ~
+
